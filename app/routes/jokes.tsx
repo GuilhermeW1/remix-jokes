@@ -7,7 +7,9 @@ import type { Joke } from "@prisma/client";
 
 export const loader: LoaderFunction = async () => {
   const jokesList = await db.joke.findMany({
-    select: {id: true, name: true}
+    orderBy: { createdAt: "desc"},
+    select: {id: true, name: true},
+    take: 5,
   });
   return json({
     jokes: jokesList

@@ -11,7 +11,6 @@ export const loader: LoaderFunction = async () => {
     skip: randomRowNumber,
   });
 
-  console.log(randomJoke)
   return json({randomJoke})
 };
 
