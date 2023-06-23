@@ -64,3 +64,53 @@ export async function createUserSession(
     },
   });
 }
+
+async function getUserSession(request: Request){
+  return storage.getSession(request.headers.get("Cookie"))
+}
+
+export async function getUserId(request: Request){
+  const session = await getUserSession(request)
+  const userId =  session.get("userId")
+  if(typeof userId !== 'string') return null 
+  return userId
+} 
+
+export async function requireUserId(
+  request: Request, 
+  redirectTo: string = new URL(request.url).pathname
+){
+  console.log(redirectTo)
+  const userId = await getUserId(request)
+  if(!userId || typeof userId !== 'string') {
+  
+    let url = new URLSearchParams([
+      ["redirectTo", redirectTo]
+    ])
+    throw redirect(`/login?${url}`)
+  }
+  return userId
+}
+
+export async function getUser(request: Request){
+  const userId = await getUserId(request)
+  if(!userId) return null
+  return db.user.findFirst({where: {id: userId}})
+}
+
+export async function logout(request: Request){
+  const session =  await getUserSession(request)
+  return redirect (`/jokes`, {
+    headers: {
+      "Set-Cookie": await storage.destroySession(session)
+    }
+  })
+}
+
+export async function register({username, password}: LoginForm){
+  const passwordHash = await bcrypt.hash(password, 10);
+  const user = await db.user.create({
+    data: {username, passwordHash}
+  });
+  return {id: user.id, username}
+}

@@ -4,6 +4,7 @@ import { useActionData } from '@remix-run/react'
 
 import { db } from '~/utils/db.server'
 import { badRequest } from '~/utils/request.server'
+import { requireUserId } from '~/utils/session.server'
 
 function validateJokeName(name:string){
   if(name.length < 3){
@@ -24,6 +25,7 @@ type ActionData = {
 }
 
 export let action: ActionFunction = async ({request}: ActionArgs): Promise<Response | ActionData> => {
+  const userId = await requireUserId(request)
   const form = await request.formData()
   const name = form.get('name')
   const content = form.get('content')
@@ -50,7 +52,7 @@ export let action: ActionFunction = async ({request}: ActionArgs): Promise<Respo
   }
 
   let joke = await db.joke.create({
-    data: {name, content}
+    data: {name, content, jokesterId: userId}
   })
   return redirect(`/jokes/${joke.id}`) 
 }
